@@ -56,8 +56,7 @@ class If < Struct.new(:condition, :consequence, :alternative)
 
   def reduce(environment)
     if condition.reducible?
-      [If.new(condition.reduce(environment, consequence, alternative), environment)]
-      [consequence, environment]
+      [If.new(condition.reduce(environment), consequence, alternative), environment]
     else
       case condition
         when Boolean.new(true)
@@ -66,5 +65,49 @@ class If < Struct.new(:condition, :consequence, :alternative)
           [alternative, environment]
       end
     end
+  end
+end
+
+# シーケンス(複数の命令を順番に行う文)を表現する
+class Sequence < Struct.new(:first, :second)
+  def to_s
+    "#{first}; #{second}"
+  end
+
+  def inspect
+    "<<#{self}>>"
+  end
+
+  def reducible?
+    true
+  end
+
+  def reduce(environment)
+    case first
+      when DoNothing.new
+        [second, environment]
+      else
+        reduced_first, reduced_environment = first.reduce(environment)
+        [Sequence.new(reduced_first, second), reduced_environment]
+    end
+  end
+end
+
+# while文を表現する
+class While < Struct.new(:condition, :body)
+  def to_s
+    "while(#{condition}) { #{body} }"
+  end
+
+  def inspect
+    "<<#{self}>>"
+  end
+
+  def reducible?
+    true
+  end
+
+  def reduce(environment)
+    [If.new(condition, Sequence.new(body, self), DoNothing.new), environment]
   end
 end
