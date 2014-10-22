@@ -1,0 +1,3 @@
+source 'https://rubygems.org'  # URLの指定。呪文だと思って毎回書く
+
+gem 'treetop'      # 最新版をインストール
