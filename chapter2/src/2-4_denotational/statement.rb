@@ -7,10 +7,6 @@ class Assign < Struct.new(:name, :expression)
     "<<#{self}>>"
   end
 
-  def evaluate(environment)
-    environment.merge( { name => expression.evaluate(environment) } )
-  end
-
   def to_ruby
     "-> e { e.merge( { #{name.inspect} => #{expression.to_ruby}.call(e) } ) }"
   end
@@ -25,10 +21,6 @@ class DoNothing
     "<<#{self}>>"
   end
 
-  def evaluate(environment)
-    environment
-  end
-
   def to_ruby
     '-> e { e }'
   end
@@ -41,15 +33,6 @@ class If < Struct.new(:condition, :consequence, :alternative)
 
   def inspect
     "<<#{self}>>"
-  end
-
-  def evaluate(environment)
-    case condition.evaluate(environment)
-      when Boolean.new(true)
-        consequence.evaluate(environment)
-      when Boolean.new(false)
-        alternative.evaluate(environment)
-    end
   end
 
   def to_ruby
@@ -67,10 +50,6 @@ class Sequence < Struct.new(:left, :right)
     "<<#{self}>>"
   end
 
-  def evaluate(environment)
-    second.evaluate(first.evaluate(environment))
-  end
-
   def to_ruby
     "-> e { #{second.to_ruby}.call(#{first.to_ruby}.call(e)) }"
   end
@@ -83,15 +62,6 @@ class While < Struct.new(:condition, :body)
 
   def inspect
     "<<#{self}>>"
-  end
-
-  def evaluate(environment)
-    case condition.evaluate(environment)
-      when Boolean.new(true)
-        evaluate(body.evaluate(environment))
-      when Boolean.new(false)
-        environment
-    end
   end
 
   def to_ruby

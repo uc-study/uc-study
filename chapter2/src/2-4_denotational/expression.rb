@@ -7,10 +7,6 @@ class Number < Struct.new(:value)
     "<<#{self}>>"
   end
 
-  def evaluate(environment)
-    self
-  end
-
   def to_ruby
     "-> e { #{value.inspect} }"
   end
@@ -25,10 +21,6 @@ class Boolean < Struct.new(:value)
     "<<#{self}>>"
   end
 
-  def evaluate(environment)
-    self
-  end
-
   def to_ruby
     "-> e { #{value.inspect} }"
   end
@@ -41,10 +33,6 @@ class Variable < Struct.new(:name)
 
   def inspect
     "<<#{self}>>"
-  end
-
-  def evaluate(environment)
-    environment[name]
   end
 
   def to_ruby
@@ -62,10 +50,6 @@ class Add < Struct.new(:left, :right)
     "<<#{self}>>"
   end
 
-  def evaluate(environment)
-    Number.new(left.evaluate(environment).value + right.evaluate(environment).value)
-  end
-
   def to_ruby
     "-> e { #{left.to_ruby}.call(e) + #{right.to_ruby}.call(e) }"
   end
@@ -81,10 +65,6 @@ class Multiply < Struct.new(:left, :right)
     "<<#{self}>>"
   end
 
-  def evaluate(environment)
-    Number.new(left.evaluate(environment).value * right.evaluate(environment).value)
-  end
-
   def to_ruby
     "-> e { #{left.to_ruby}.call(e) * #{right.to_ruby}.call(e) }"
   end
@@ -98,10 +78,6 @@ class LessThan < Struct.new(:left, :right)
 
   def inspect
     "<<#{self}>>"
-  end
-
-  def evaluate(environment)
-    Boolean.new(left.evaluate(environment).value < right.evaluate(environment).value)
   end
 
   def to_ruby
