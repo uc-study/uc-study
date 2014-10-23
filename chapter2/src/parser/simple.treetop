@@ -1,6 +1,6 @@
 grammar Simple
   rule statement
-    while / assign
+    while / assign / if
   end
 
   rule while
@@ -19,24 +19,37 @@ grammar Simple
     }
   end
 
+  rule if
+    'if (' condition:expression ') { ' consequence:statement ' } else { ' alternative:statement ' }' {
+      def to_ast
+        If.new(condition.to_ast, consequence.to_ast, alternative.to_ast)
+      end
+    }
+  end
+
   rule expression
-    less_than
+    less_than / operation
   end
 
   rule less_than
-    left:multiply ' < ' right:less_than {
+    left:operation ' < ' right:less_than {
       def to_ast
         LessThan.new(left.to_ast, right.to_ast)
       end
     }
     /
-    multiply
+    operation
   end
 
-  rule multiply
-    left:term ' * ' right:multiply {
+  rule operation
+    left:term operator:(' * ' / ' + ') right:operation {
       def to_ast
-        Multiply.new(left.to_ast, right.to_ast)
+        case operator.text_value
+          when ' * '
+            Multiply.new(left.to_ast, right.to_ast)
+          when ' + '
+            Add.new(left.to_ast, right.to_ast)
+        end
       end
     }
     /
@@ -44,7 +57,7 @@ grammar Simple
   end
 
   rule term
-    number / variable
+    number / variable / boolean
   end
 
   rule number
@@ -62,4 +75,18 @@ grammar Simple
       end
     }
   end
+
+  rule boolean
+    (true/false) {
+      def to_ast
+      	case text_value
+      	  when 'true'
+      	    Boolean.new(true)
+      	  when 'false'
+      	    Boolean.new(false)
+      	end
+      end
+    }
+  end
+
 end
