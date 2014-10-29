@@ -22,12 +22,6 @@ class DFARulebook < Struct.new(:rules)
     end
 end
 
-rulebook = DFARulebook.new([
-   FARule.new(1, 'a', 2) , FARule.new(1, 'b', 1),
-   FARule.new(2, 'a', 2) , FARule.new(2, 'b', 3),
-   FARule.new(3, 'a', 3) , FARule.new(3, 'b', 3)
-])
-
 class DFA < Struct.new(:current_state, :accept_states, :rulebook)
     def accepting?
         accept_states.include?(current_state)
@@ -55,6 +49,12 @@ class DFADesign < Struct.new(:start_state, :accept_states, :rulebook)
 end
 
 ######################################################################
+rulebook = DFARulebook.new([
+   FARule.new(1, 'a', 2) , FARule.new(1, 'b', 1),
+   FARule.new(2, 'a', 2) , FARule.new(2, 'b', 3),
+   FARule.new(3, 'a', 3) , FARule.new(3, 'b', 3)
+])
+
 puts '# rulebook'
 next_state = rulebook.next_state(1, 'a')
 puts 'next_state is ' +  next_state.to_s
