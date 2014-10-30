@@ -18,6 +18,7 @@ module Pattern
     end
 end
 
+# 空
 class Empty
     include Pattern
 
@@ -38,6 +39,7 @@ class Empty
     end
 end
 
+# リテラル
 class Literal < Struct.new(:character)
     include Pattern
 
@@ -59,6 +61,7 @@ class Literal < Struct.new(:character)
     end
 end
 
+# 文字列結合
 class Concatenate < Struct.new(:first, :second)
     include Pattern
 
@@ -85,6 +88,7 @@ class Concatenate < Struct.new(:first, :second)
     end
 end
 
+# グループ
 class Choose < Struct.new(:first, :second)
     include Pattern
 
@@ -112,7 +116,7 @@ class Choose < Struct.new(:first, :second)
     end
 end
 
-
+# 繰り返し
 class Repeat < Struct.new(:pattern)
     include Pattern
 
