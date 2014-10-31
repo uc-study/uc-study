@@ -88,7 +88,7 @@ class Concatenate < Struct.new(:first, :second)
     end
 end
 
-# グループ
+# または
 class Choose < Struct.new(:first, :second)
     include Pattern
 

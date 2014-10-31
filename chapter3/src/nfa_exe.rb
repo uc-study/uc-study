@@ -82,6 +82,7 @@ puts nfa_design.accepts?('aaaaaa')
 puts ''
 ######################################################################
 puts '# NFA Simulation'
+
 rulebook = NFARulebook.new([
     FARule.new(1, 'a', 1), FARule.new(1, 'a', 2), FARule.new(1, nil, 2),
     FARule.new(2, 'b', 3),
@@ -122,3 +123,11 @@ start_state = nfa_design.to_nfa.current_states
 puts simulation.discover_states_and_rules(Set[start_state])
 puts nfa_design.to_nfa(Set[1, 2]).accepting?
 puts nfa_design.to_nfa(Set[2, 3]).accepting?
+
+puts ''
+######################################################################
+puts '# To DFA'
+dfa_design = simulation.to_dfa_design
+puts dfa_design.accepts?('aaa')
+puts dfa_design.accepts?('aab')
+puts dfa_design.accepts?('bbbabb')

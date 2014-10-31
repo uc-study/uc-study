@@ -1,21 +1,6 @@
+# 重複した状態をもつ必要がないためSetで状態を管理
 require 'set'
-
-# 有限オートマトンの規則
-class FARule < Struct.new(:state, :character, :next_state)
-    # 規則が適用できるか
-    def applies_to?(state, character)
-        self.state == state && self.character == character
-    end
-
-    # 次の状態
-    def follow
-        next_state
-    end
-
-    def inspect
-        "#<FARule # {state.inspect} --# {character} --> #{next_state.inspect}>"
-    end
-end
+require 'dfa'
 
 # 非決定性有限オートマトンの規則集
 class NFARulebook < Struct.new(:rules)
@@ -45,7 +30,7 @@ class NFARulebook < Struct.new(:rules)
         end
     end
 
-    # アルファベット
+    # どんな文字を読めるか
     def alphabet
         rules.map(&:character).compact.uniq
     end
@@ -115,5 +100,14 @@ class NFASimulation < Struct.new(:nfa_design)
         else
             discover_states_and_rules(states + more_states)
         end
+    end
+
+    # DFAに変換
+    def to_dfa_design
+        start_state = nfa_design.to_nfa.current_states
+        states, rules = discover_states_and_rules(Set[start_state])
+        accept_states = states.select { |state| nfa_design.to_nfa(state).accepting? }
+
+        DFADesign.new(start_state, accept_states, DFARulebook.new(rules))
     end
 end
