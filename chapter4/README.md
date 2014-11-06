@@ -4,28 +4,28 @@
 ## 用語
 ### 前章までに出てきた言葉
 * FA 有限オートマトン（=有限状態機械）
-* DFA 決定性有限オートマトン 
-* NFA 非決定性有限オートマトン 
+* DFA 決定性有限オートマトン
+* NFA 非決定性有限オートマトン
 
 ### 本章で出てくる言葉
 * PDA プッシュダウン・オートマトン
 * DPDA 決定性プッシュダウン・オートマトン
 * NPDA 非決定性プッシュダウン・オートマトン
+* CFG 文脈自由文法
 
 ## 超まとめ
 * PDAは組み込みのスタックをもつFA
 * PDAはFA(DFA,NFA)よりも能力が高い
 * NPDAはDPDAよりも能力が高い
 * PDAにできること
-** 対になった文字の認識('(())')
-** 回文の認識('aabbaa')
-** プログラミング言語のパース(字句解析＋構文解析)
+ * 対になった文字の認識```(())```
+ * 回文の認識```aabbaa```
+ * プログラミング言語のパース(字句解析＋構文解析)
 * が、まだまだ力不足 →『5章 究極の機械』へ続く・・・
 
-## ソースコード
-```just_add_power```配下参照
+## 解説
+irbで説明しながら読み進めていきましょう
 
-## irbでの実行例
 ```ruby
 # bundle exec irb -r ./just_add_power.rb
 
@@ -42,8 +42,10 @@ nfa_design.accepts?('())')
 nfa_design.accepts?('(())')
 nfa_design.accepts?('(()(()()))')
 nfa_design.accepts?('(((())))') # 4個以上だとダメ
+```
 
-# 解釈可能な正規表現もある
+解釈可能な正規表現もある
+```ruby
 balanced =
   /
     \A              # match beginning of string
@@ -56,15 +58,39 @@ balanced =
     \z              # match end of string
   /x
 ['(()', '())', '(())', '(()(()()))', '((((((((((()))))))))))'].grep(balanced)
+```
 
 
-# スタック
+### 4.1　決定性プッシュダウン・オートマトン
+
+#### 4.1.1　ストレージ
+スタック
+```ruby
 stack = Stack.new(['a', 'b', 'c', 'd', 'e'])
 stack.top
 stack.pop.pop.top
 stack.push('x').push('y').top
 stack.push('x').push('y').pop.top
+```
 
+#### 4.1.2　規則
+PDAは規則にしたがう度に**必ず**スタックのトップにある文字をポップし、
+そのあとにいくつかの文字列をプッシュする。
+
+##### 記法がややこしや
+```
+$ = スタックの底を表す。空のスタックは$だけのスタック
+(; = (を読む
+b/bb = bをポップし、bbをプッシュ
+$/$ 何も読まないで、$をポップし、$をプッシュ
+```
+
+#### 4.1.3　決定性
+#### 4.1.4　シミュレーション
+
+### 4.2　非決定性プッシュダウン・オートマトン
+#### 4.2.1　シミュレーション
+```ruby
 # 有限プッシュダウンオートマトン
 rule = PDARule.new(1, '(', 2, '$', ['b', '$'])
 configuration = PDAConfiguration.new(1, Stack.new(['$']))
@@ -174,13 +200,29 @@ npda_design.accepts?('abba')
 npda_design.accepts?('babbaabbab')
 npda_design.accepts?('abb')
 npda_design.accepts?('baabaa')
+```
 
+#### 4.2.2　非等価性
+* NPDAをDPDAに変換することはできない。
+* NPDAはDPDAよりも能力は高い。
+
+### 4.3　プッシュダウン・オートマトンによるパース
+
+#### 4.3.1　字句解析
+```ruby
+# ./just_add_power/lexical_analyzer.rb
 LexicalAnalyzer.new('y = x * 7').analyze
 LexicalAnalyzer.new('while (x < 5) { x = x * 3 }').analyze
 LexicalAnalyzer.new('if (x < 10) { y = true; x = 0 } else { do-nothing }').analyze
 LexicalAnalyzer.new('x = false').analyze
 LexicalAnalyzer.new('x = falsehood').analyze
+```
+
+#### 4.3.2　構文解析
+```ruby
 start_rule = PDARule.new(1, nil, 2, '$', ['S', '$'])
+
+# 文脈自由文法(CFG)を表している
 symbol_rules =
   [
     # <statement> ::= <while> | <assign>
@@ -219,3 +261,9 @@ token_string = LexicalAnalyzer.new('while (x < 5) { x = x * 3 }').analyze.join
 npda_design.accepts?(token_string)
 npda_design.accepts?(LexicalAnalyzer.new('while (x < 5 x = x * }').analyze.join)
 ```
+
+#### 4.3.3　実用性
+実際の応用ではNPDAはさけるべき。遅い。
+
+#### 4.4　どれだけ能力があるか
+足らぬ。
