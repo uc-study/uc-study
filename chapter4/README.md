@@ -1,3 +1,15 @@
+# 第4章 
+本家ソースコードサンプル：https://github.com/tomstuart/computationbook
+
+## ソースコード
+```just_add_power```配下参照
+
+## irbでの実行例
+```ruby
+# bundle exec irb -r ./just_add_power.rb
+
+# 入れ子の話
+# 前回同様NFAで表現可能だが・・・
 rulebook = NFARulebook.new([
   FARule.new(0, '(', 1), FARule.new(1, ')', 0),
   FARule.new(1, '(', 2), FARule.new(2, ')', 1),
@@ -8,8 +20,9 @@ nfa_design.accepts?('(()')
 nfa_design.accepts?('())')
 nfa_design.accepts?('(())')
 nfa_design.accepts?('(()(()()))')
-nfa_design.accepts?('(((())))')
+nfa_design.accepts?('(((())))') # 4個以上だとダメ
 
+# 解釈可能な正規表現もある
 balanced =
   /
     \A              # match beginning of string
@@ -23,12 +36,15 @@ balanced =
   /x
 ['(()', '())', '(())', '(()(()()))', '((((((((((()))))))))))'].grep(balanced)
 
+
+# スタック
 stack = Stack.new(['a', 'b', 'c', 'd', 'e'])
 stack.top
 stack.pop.pop.top
 stack.push('x').push('y').top
 stack.push('x').push('y').pop.top
 
+# 有限プッシュダウンオートマトン
 rule = PDARule.new(1, '(', 2, '$', ['b', '$'])
 configuration = PDAConfiguration.new(1, Stack.new(['$']))
 rule.applies_to?(configuration, '(')
@@ -181,3 +197,4 @@ npda_design = NPDADesign.new(1, '$', [3], rulebook)
 token_string = LexicalAnalyzer.new('while (x < 5) { x = x * 3 }').analyze.join
 npda_design.accepts?(token_string)
 npda_design.accepts?(LexicalAnalyzer.new('while (x < 5 x = x * }').analyze.join)
+```
