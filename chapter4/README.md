@@ -24,7 +24,7 @@
 * が、まだまだ力不足 →『5章 究極の機械』へ続く・・・
 
 ## 解説
-irbで説明しながら読み進めていきましょう
+irbで動かしながら読み進めていきましょう
 
 ```ruby
 # bundle exec irb -r ./just_add_power.rb
@@ -65,13 +65,6 @@ balanced =
 
 #### 4.1.1　ストレージ
 スタック
-```ruby
-stack = Stack.new(['a', 'b', 'c', 'd', 'e'])
-stack.top
-stack.pop.pop.top
-stack.push('x').push('y').top
-stack.push('x').push('y').pop.top
-```
 
 #### 4.1.2　規則
 PDAは規則にしたがう度に**必ず**スタックのトップにある文字をポップし、
@@ -86,22 +79,45 @@ $/$ 何も読まないで、$をポップし、$をプッシュ
 ```
 
 #### 4.1.3　決定性
-#### 4.1.4　シミュレーション
+* 矛盾がない
+* 省略がない・・・ → 組み合わせが膨大過ぎて無理ゲー
+ * 関心のある規則だけを記述する
+ * 適用する規則がない場合は行き詰まり状態（＝動けない状態）とする
 
-### 4.2　非決定性プッシュダウン・オートマトン
-#### 4.2.1　シミュレーション
+#### 4.1.4　シミュレーション
 ```ruby
-# 有限プッシュダウンオートマトン
+# スタックの例
+# just_add_power/stack.rb
+stack = Stack.new(['a', 'b', 'c', 'd', 'e'])
+stack.top
+stack.pop.pop.top
+stack.push('x').push('y').top
+stack.push('x').push('y').pop.top
+```
+
+
+```ruby
+# これがPDAだ
 rule = PDARule.new(1, '(', 2, '$', ['b', '$'])
 configuration = PDAConfiguration.new(1, Stack.new(['$']))
 rule.applies_to?(configuration, '(')
-
+```
+```ruby
+# コラムの箇所
+# 複数の文字をスタックにプッシュし、そのあと
+# それらの文字をポップすると、文字は逆順になります
 stack = Stack.new(['$']).push('x').push('y').push('z')
 stack.top
 stack = stack.pop; stack.top
 stack = stack.pop; stack.top
-rule.follow(configuration)
+```
 
+```ruby
+rule.follow(configuration)
+```
+
+```ruby
+# DPDAに構成と入力文字を手作業で与えてみる
 rulebook = DPDARulebook.new([
   PDARule.new(1, '(', 2, '$', ['b', '$']),
   PDARule.new(2, '(', 2, 'b', ['b', 'b']),
@@ -112,33 +128,48 @@ configuration = rulebook.next_configuration(configuration, '(')
 configuration = rulebook.next_configuration(configuration, '(')
 configuration = rulebook.next_configuration(configuration, ')')
 
+# DPDAインスタンスを生成し、入力を与えて、それが受理されるかどうかを調べる
 dpda = DPDA.new(PDAConfiguration.new(1, Stack.new(['$'])), [1], rulebook)
 dpda.accepting?
 dpda.read_string('(()'); dpda.accepting?
 dpda.current_configuration
 
+# 自由移動をサポートしたかを確認
 configuration = PDAConfiguration.new(2, Stack.new(['$']))
 rulebook.follow_free_moves(configuration)
+
+# 構成を変えない自由移動があると無限ループ
 DPDARulebook.new([PDARule.new(1, nil, 1, '$', ['$'])]).
   follow_free_moves(PDAConfiguration.new(1, Stack.new(['$'])))
 
+# 任意の深さにネストしたバランスのとれたカッコを含む
+# 複雑な文字列を認識できる
 dpda = DPDA.new(PDAConfiguration.new(1, Stack.new(['$'])), [1], rulebook)
 dpda.read_string('(()('); dpda.accepting?
 dpda.current_configuration
 dpda.read_string('))()'); dpda.accepting?
 dpda.current_configuration
 
+# DPDADesignにラップ
 dpda_design = DPDADesign.new(1, '$', [1], rulebook)
 dpda_design.accepts?('(((((((((())))))))))')
 dpda_design.accepts?('()(())((()))(()(()))')
 dpda_design.accepts?('(()(()(()()(()()))()')
+# 失敗してしまう例
 dpda_design.accepts?('())')
 
+# 行儀よく行き詰まり状態になる例
 dpda = DPDA.new(PDAConfiguration.new(1, Stack.new(['$'])), [1], rulebook)
 dpda.read_string('())'); dpda.current_configuration
 dpda.accepting?
 dpda.stuck?
 dpda_design.accepts?('())')
+```
+
+### 4.2　非決定性プッシュダウン・オートマトン
+```ruby
+# aとbの文字を同じ数だけ含んだ文字列を認識する例
+# 図4-3
 rulebook = DPDARulebook.new([
   PDARule.new(1, 'a', 2, '$', ['a', '$']),
   PDARule.new(1, 'b', 2, '$', ['b', '$']),
@@ -152,6 +183,9 @@ dpda_design = DPDADesign.new(1, '$', [1], rulebook)
 dpda_design.accepts?('ababab')
 dpda_design.accepts?('bbbaaaab')
 dpda_design.accepts?('baa')
+
+# mをマーカー文字として使っているパターン
+# 図4-5
 rulebook = DPDARulebook.new([
   PDARule.new(1, 'a', 1, '$', ['a', '$']),
   PDARule.new(1, 'a', 1, 'a', ['a', 'a']),
@@ -171,7 +205,11 @@ dpda_design.accepts?('abmba')
 dpda_design.accepts?('babbamabbab')
 dpda_design.accepts?('abmb')
 dpda_design.accepts?('baambaa')
+```
 
+
+#### 4.2.1　シミュレーション
+```ruby
 rulebook = NPDARulebook.new([
   PDARule.new(1, 'a', 1, '$', ['a', '$']),
   PDARule.new(1, 'a', 1, 'a', ['a', 'a']),
